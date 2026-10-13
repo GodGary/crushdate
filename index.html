@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你好，想约你出来玩 💕</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #ffd6e7 0%, #ffe9f2 50%, #fff5f8 100%);
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding: 16px;
+    color:#3a2a3a;
+    overflow-x:hidden;
+  }
+
+  /* 漂浮装饰 */
+  .float-deco {
+    position:fixed; pointer-events:none; z-index:0;
+    font-size:24px; opacity:.6;
+    animation: floatUp 8s ease-in-out infinite;
+  }
+  @keyframes floatUp {
+    0%,100%{ transform: translateY(0) rotate(0deg); }
+    50%{ transform: translateY(-20px) rotate(10deg); }
+  }
+
+  .card {
+    position:relative; z-index:1;
+    width:100%; max-width:420px;
+    background:#fff;
+    border-radius:28px;
+    padding:32px 24px 28px;
+    box-shadow: 0 20px 60px rgba(255,105,180,.25), 0 4px 12px rgba(0,0,0,.05);
+    border-top: 6px solid #ff5c9e;
+  }
+
+  .page { display:none; animation: fadeIn .4s ease; }
+  .page.active { display:block; }
+  @keyframes fadeIn {
+    from{ opacity:0; transform: translateY(10px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  .top-deco {
+    text-align:center; font-size:22px; letter-spacing:6px; margin-bottom:18px;
+  }
+  /* 第1页动态：装饰摇摆闪烁 */
+  #page1 .top-deco { animation: decoSway 3s ease-in-out infinite; }
+  @keyframes decoSway {
+    0%,100%{ transform: rotate(-3deg); }
+    50%{ transform: rotate(3deg); }
+  }
+  #page1 .top-deco span { display:inline-block; }
+  .twinkle { animation: twinkle 1.2s ease-in-out infinite; }
+  @keyframes twinkle {
+    0%,100%{ opacity:1; transform: scale(1.2) rotate(0deg); }
+    50%{ opacity:.5; transform: scale(.9) rotate(20deg); }
+  }
+  /* 第1页头像心跳 */
+  #page1 .avatar { animation: avatarHeartbeat 1.4s ease-in-out infinite; }
+  @keyframes avatarHeartbeat {
+    0%,100%{ transform: scale(1); }
+    15%{ transform: scale(1.12); }
+    30%{ transform: scale(1); }
+    45%{ transform: scale(1.08); }
+  }
+  /* 第1页标题弹跳入场 */
+  #page1 h1 { animation: titlePop .8s cubic-bezier(.34,1.56,.64,1) both; }
+  #page1 .subtitle { animation: fadeInUp .8s .3s ease both; }
+  #page1 .btn-row { animation: fadeInUp .8s .5s ease both; }
+  @keyframes fadeInUp {
+    from{ opacity:0; transform: translateY(16px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  @keyframes titlePop {
+    0%{ opacity:0; transform: scale(.6); }
+    70%{ opacity:1; transform: scale(1.06); }
+    100%{ opacity:1; transform: scale(1); }
+  }
+  /* 漂浮爱心粒子 */
+  .heart-particle {
+    position:fixed; pointer-events:none; z-index:50;
+    font-size:20px;
+    animation: heartFloat 3s ease-out forwards;
+  }
+  @keyframes heartFloat {
+    0%{ opacity:0; transform: translate(0,0) scale(.5) rotate(0deg); }
+    15%{ opacity:1; }
+    100%{ opacity:0; transform: translate(var(--hx), -180px) scale(1.3) rotate(var(--hr)); }
+  }
+  /* 背景流光 */
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0;
+    background: radial-gradient(circle at 20% 30%, rgba(255,150,200,.35), transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255,180,220,.3), transparent 50%);
+    animation: bgGlow 6s ease-in-out infinite alternate;
+  }
+  @keyframes bgGlow {
+    from{ opacity:.5; transform: translate(0,0); }
+    to{ opacity:1; transform: translate(20px,-20px); }
+  }
+
+  .avatar-wrap {
+    display:flex; justify-content:center; margin-bottom:22px;
+    position:relative;
+  }
+  .avatar {
+    width:110px; height:110px; border-radius:50%;
+    background: linear-gradient(135deg, #ffd6e7, #ffb3d1);
+    display:flex; align-items:center; justify-content:center;
+    font-size:56px;
+    box-shadow: 0 0 0 6px #ffe4ef, 0 8px 20px rgba(255,92,158,.3);
+    position:relative;
+  }
+  .avatar-hearts {
+    position:absolute; top:-4px; right:calc(50% - 70px);
+    font-size:22px; animation: beat 1.2s ease infinite;
+  }
+  @keyframes beat {
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.2); }
+  }
+
+  h1 {
+    text-align:center; font-size:26px; font-weight:800;
+    line-height:1.4; margin-bottom:14px; color:#2d1f2d;
+  }
+  .subtitle {
+    text-align:center; color:#a07a90; font-size:15px;
+    line-height:1.6; margin-bottom:28px; padding:0 8px;
+  }
+
+  .btn-row {
+    display:flex; gap:14px; margin-top:8px;
+  }
+  .btn {
+    flex:1; padding:16px 10px; border:none; border-radius:30px;
+    font-size:17px; font-weight:700; cursor:pointer;
+    transition: transform .15s, box-shadow .15s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn-primary {
+    background: linear-gradient(135deg, #ff6aa9, #ff3d8b);
+    color:#fff;
+    box-shadow: 0 8px 20px rgba(255,61,139,.4);
+  }
+  /* 好呀按钮：持续脉冲放大 */
+  #page1 .btn-primary {
+    animation: btnPulse 1.3s ease-in-out infinite;
+  }
+  @keyframes btnPulse {
+    0%,100%{ transform: scale(1); box-shadow: 0 8px 20px rgba(255,61,139,.4); }
+    50%{ transform: scale(1.08); box-shadow: 0 12px 28px rgba(255,61,139,.6); }
+  }
+  /* 不要按钮：可位移 */
+  #page1 .btn-ghost {
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .btn-ghost {
+    background:#fff0f5; color:#b07090;
+    border:2px solid #ffc2da;
+  }
+  .btn-full {
+    width:100%; margin-top:8px;
+    background: linear-gradient(135deg, #ff6aa9, #ff3d8b);
+    color:#fff; border:none; border-radius:30px;
+    padding:17px; font-size:17px; font-weight:700;
+    box-shadow: 0 8px 20px rgba(255,61,139,.4);
+    cursor:pointer; font-family:inherit;
+    transition: transform .15s, opacity .2s;
+  }
+  .btn-full:disabled { opacity:.6; }
+  .btn-full:active { transform: scale(.97); }
+
+  /* 分页指示点 */
+  .dots {
+    display:flex; justify-content:center; gap:8px; margin-top:22px;
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:#ffd0e3; transition:all .3s; }
+  .dot.on { background:#ff3d8b; width:24px; border-radius:4px; }
+
+  /* 第2页表单 */
+  .field { margin-bottom:18px; }
+  .field label {
+    display:flex; align-items:center; gap:8px;
+    font-size:15px; font-weight:700; color:#5a3a4a; margin-bottom:8px;
+  }
+  .field input {
+    width:100%; max-width:100%; padding:15px 16px;
+    border:2px solid #ffd0e3; border-radius:16px;
+    background:#fff5f9; font-size:16px; color:#3a2a3a;
+    font-family:inherit; outline:none;
+    transition: border-color .2s;
+    min-height:52px;
+    box-sizing:border-box; display:block;
+  }
+  .field input:focus { border-color:#ff6aa9; background:#fff; }
+  .field input::placeholder { color:#c99fb3; }
+  /* 统一显示框：三个框外观完全一致 */
+  .field { position:relative; }
+  .fake-input {
+    width:100%; padding:15px 16px;
+    border:2px solid #ffd0e3; border-radius:16px;
+    background:#fff5f9; font-size:16px; color:#3a2a3a;
+    min-height:52px; display:flex; align-items:center; justify-content:center;
+    box-sizing:border-box;
+  }
+  /* 透明原生 picker 覆盖在显示框上，点击可唤起选择器但不影响外观 */
+  .real-picker {
+    position:absolute; left:0; right:0; bottom:0;
+    height:52px; width:100%;
+    opacity:0; cursor:pointer;
+    border:none; background:transparent; padding:0; margin:0;
+  }
+
+  /* 第3页食物网格 */
+  .food-grid {
+    display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;
+    margin: 20px 0;
+  }
+  .food-item {
+    background:#fff0f5; border-radius:18px;
+    padding:16px 8px; text-align:center; cursor:pointer;
+    border:2px solid transparent;
+    transition: all .2s;
+    user-select:none;
+  }
+  .food-item .emo { font-size:34px; display:block; margin-bottom:6px; }
+  .food-item .name { font-size:14px; font-weight:600; color:#5a3a4a; }
+  .food-item.selected {
+    background: linear-gradient(135deg,#ffd6e7,#ffb3d1);
+    border-color:#ff5c9e;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(255,92,158,.3);
+  }
+  /* 自定义输入框：直接常显 */
+  .custom-field {
+    margin-top:-4px; margin-bottom:16px;
+  }
+  .custom-field input {
+    width:100%; padding:14px 16px;
+    border:2px dashed #ff8ab5; border-radius:16px;
+    background:#fff5f9; font-size:16px; color:#3a2a3a;
+    font-family:inherit; outline:none; min-height:50px;
+  }
+  .custom-field input:focus { border-style:solid; background:#fff; }
+
+  /* 第4页 */
+  .summary-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    margin:20px 0;
+  }
+  .summary-card {
+    background:#fff5f9; border-radius:18px; padding:16px 12px;
+    text-align:center;
+  }
+  .summary-card .emo { font-size:26px; }
+  .summary-card .lab { font-size:13px; color:#a07a90; margin:6px 0 4px; }
+  .summary-card .val { font-size:17px; font-weight:800; color:#2d1f2d; }
+
+  /* 彩带 */
+  .confetti {
+    position:fixed; width:10px; height:10px; top:-20px;
+    z-index:100; pointer-events:none;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity:0; }
+  }
+  /* 祝福弹幕气泡 */
+  .blessing {
+    position:fixed; left:50%; top:38%;
+    z-index:500; pointer-events:none;
+    background: linear-gradient(135deg,#ff5c9e,#ff8fc0);
+    color:#fff; font-weight:800; font-size:19px;
+    padding:18px 26px; border-radius:24px;
+    box-shadow: 0 12px 40px rgba(255,61,139,.5);
+    text-align:center; max-width:86%; line-height:1.5;
+    transform: translate(-50%,-50%) scale(0);
+    animation: blessingPop 2.6s ease forwards;
+  }
+  @keyframes blessingPop {
+    0%{ transform: translate(-50%,-50%) scale(0) rotate(-8deg); opacity:0; }
+    15%{ transform: translate(-50%,-50%) scale(1.15) rotate(2deg); opacity:1; }
+    25%{ transform: translate(-50%,-50%) scale(1) rotate(0deg); }
+    80%{ opacity:1; }
+    100%{ transform: translate(-50%,-80%) scale(1.1); opacity:0; }
+  }
+  /* 横向飘过的祝福条 */
+  .blessing-strip {
+    position:fixed; z-index:400; pointer-events:none;
+    background: rgba(255,255,255,.92);
+    color:#ff3d8b; font-weight:700; font-size:15px;
+    padding:10px 18px; border-radius:20px;
+    box-shadow: 0 6px 20px rgba(255,92,158,.3);
+    white-space:nowrap;
+    animation: stripAcross 3.5s linear forwards;
+  }
+  @keyframes stripAcross {
+    from{ transform: translateX(110vw); }
+    to{ transform: translateX(-120vw); }
+  }
+  /* 屏幕震动 */
+  .shake { animation: screenShake .5s ease; }
+  @keyframes screenShake {
+    0%,100%{ transform: translate(0,0); }
+    20%{ transform: translate(-8px,4px); }
+    40%{ transform: translate(8px,-4px); }
+    60%{ transform: translate(-6px,-4px); }
+    80%{ transform: translate(6px,4px); }
+  }
+  /* 大爱心爆发 */
+  .big-heart {
+    position:fixed; left:50%; top:50%;
+    z-index:600; pointer-events:none; font-size:40px;
+    transform: translate(-50%,-50%) scale(0);
+    animation: bigHeartBurst 1.2s ease forwards;
+  }
+  @keyframes bigHeartBurst {
+    0%{ opacity:0; transform: translate(-50%,-50%) scale(0); }
+    30%{ opacity:1; transform: translate(-50%,-50%) scale(1.6); }
+    100%{ opacity:0; transform: translate(-50%,-50%) scale(2.6); }
+  }
+  /* 气球从底部飘起（已停用，保留备用） */
+  .balloon {
+    position:fixed; bottom:-80px; z-index:450; pointer-events:none;
+    font-size:44px;
+    animation: balloonRise linear forwards;
+  }
+  @keyframes balloonRise {
+    0%{ transform: translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:1; }
+    100%{ transform: translateY(-110vh) rotate(8deg); opacity:.9; }
+  }
+  /* 火漆印章 */
+  .seal-overlay {
+    position:fixed; inset:0; z-index:700; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle, rgba(255,255,255,.3), rgba(255,220,235,.2));
+    opacity:0;
+  }
+  .seal-overlay.show { animation: sealBg 1.8s ease forwards; }
+  @keyframes sealBg {
+    0%{ opacity:0; }
+    20%{ opacity:1; }
+    80%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+  .seal {
+    width:130px; height:130px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #ff8ab5, #e63973 70%, #b81e56);
+    display:flex; align-items:center; justify-content:center;
+    font-size:56px; color:#fff;
+    box-shadow: 0 0 0 8px rgba(230,57,115,.25), inset 0 -6px 14px rgba(0,0,0,.2), 0 18px 50px rgba(230,57,115,.5);
+    transform: scale(2.2); opacity:0;
+  }
+  .seal-overlay.show .seal { animation: sealStamp 1.6s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes sealStamp {
+    0%{ transform: scale(2.2) rotate(-15deg); opacity:0; }
+    40%{ transform: scale(1) rotate(0deg); opacity:1; }
+    60%{ transform: scale(.92); }
+    100%{ transform: scale(1) rotate(0deg); opacity:0; }
+  }
+  .seal-ring {
+    position:absolute; width:130px; height:130px; border-radius:50%;
+    border:3px solid rgba(230,57,115,.6);
+    opacity:0;
+  }
+  .seal-overlay.show .seal-ring { animation: ringWave 1.4s ease-out forwards; }
+  .seal-overlay.show .seal-ring.r2 { animation-delay:.15s; }
+  .seal-overlay.show .seal-ring.r3 { animation-delay:.3s; }
+  @keyframes ringWave {
+    0%{ transform: scale(1); opacity:.8; }
+    100%{ transform: scale(3.5); opacity:0; }
+  }
+  /* 卡片光晕 */
+  .card.glow { animation: cardGlow 1.6s ease; }
+  @keyframes cardGlow {
+    0%,100%{ box-shadow: 0 20px 60px rgba(255,105,180,.25), 0 4px 12px rgba(0,0,0,.05); }
+    50%{ box-shadow: 0 0 0 12px rgba(255,180,210,.5), 0 20px 80px rgba(255,61,139,.5); }
+  }
+  /* 祝福明信片 */
+  .postcard {
+    margin-top:12px; padding:14px 16px;
+    background: linear-gradient(135deg,#fff8fb,#ffe9f2);
+    border-left:4px solid #ff5c9e;
+    border-radius:12px; font-size:14px; color:#5a3a4a;
+    box-shadow: 0 4px 14px rgba(255,92,158,.12);
+    animation: cardIn .5s ease;
+  }
+  @keyframes cardIn {
+    from{ opacity:0; transform: translateX(-16px); }
+    to{ opacity:1; transform: translateX(0); }
+  }
+
+  /* toast */
+  .toast {
+    position:fixed; left:50%; top:50%;
+    transform: translate(-50%,-50%) scale(.9);
+    background: rgba(45,31,45,.92); color:#fff;
+    padding:16px 24px; border-radius:16px;
+    font-size:15px; z-index:999;
+    opacity:0; pointer-events:none;
+    transition: all .3s;
+    max-width:80%; text-align:center;
+  }
+  .toast.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
+
+  .hearts-row {
+    text-align:center; margin-top:18px; font-size:22px; letter-spacing:4px;
+  }
+
+  @media (max-width:360px) {
+    h1 { font-size:22px; }
+    .card { padding:24px 18px; }
+    .food-item .emo { font-size:28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ===== 第1页：邀请 ===== -->
+  <div class="page active" id="page1">
+    <div class="top-deco">🌸 <span class="twinkle">✨</span> 🌸 <span class="twinkle" style="animation-delay:.4s">✨</span> 🌸</div>
+    <div class="avatar-wrap" id="p1AvatarWrap">
+      <div class="avatar">🐶</div>
+      <div class="avatar-hearts">💕</div>
+    </div>
+    <h1>可以和我一起<br>约会吗？🥺</h1>
+    <p class="subtitle">来自 Aixin 的邀请～不用紧张，只是想和你多待一会儿而已～</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goPage(2)">好呀 💕</button>
+      <button class="btn btn-ghost" id="noBtn" onclick="noDodge()">不要 😤</button>
+    </div>
+  </div>
+
+  <!-- ===== 第2页：时间地点 ===== -->
+  <div class="page" id="page2">
+    <div class="top-deco">📅 ✨ ⏰ ✨ 📅</div>
+    <div class="avatar-wrap">
+      <div class="avatar">🐶</div>
+      <div class="avatar-hearts">💕</div>
+    </div>
+    <h1>所以…你什么时候<br>有空？🥰</h1>
+    <p class="subtitle">选一个你方便的时间，我一定到！</p>
+
+    <div class="field">
+      <label>📅 日期</label>
+      <div class="fake-input" id="dateDisplay">2026年10月16日</div>
+      <input type="date" id="dateInput" class="real-picker" onchange="updateDateDisplay()">
+    </div>
+    <div class="field">
+      <label>⏰ 时间</label>
+      <div class="fake-input" id="timeDisplay">18:00</div>
+      <input type="time" id="timeInput" class="real-picker" value="18:00" onchange="updateTimeDisplay()">
+    </div>
+    <div class="field">
+      <label>📍 你想在哪见面？</label>
+      <input type="text" id="placeInput" placeholder="地铁站、商场、还是你楼下？">
+    </div>
+
+    <button class="btn-full" onclick="goPage(3)">确定！去约会 💗</button>
+    <div class="dots">
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- ===== 第3页：吃什么 ===== -->
+  <div class="page" id="page3">
+    <div class="top-deco">🍽️ ✨ 😋 ✨ 🍽️</div>
+    <h1>我们吃点什么？🤤</h1>
+    <p class="subtitle">选你想吃的，可以多选哦～剩下的我来安排！</p>
+
+    <div class="food-grid" id="foodGrid">
+      <div class="food-item" data-name="奶茶"><span class="emo">🧋</span><span class="name">奶茶</span></div>
+      <div class="food-item" data-name="烤肉"><span class="emo">🥩</span><span class="name">烤肉</span></div>
+      <div class="food-item" data-name="火锅"><span class="emo">🍲</span><span class="name">火锅</span></div>
+      <div class="food-item" data-name="烧烤"><span class="emo">🍖</span><span class="name">烧烤</span></div>
+      <div class="food-item" data-name="日料"><span class="emo">🍣</span><span class="name">日料</span></div>
+      <div class="food-item" data-name="西餐"><span class="emo">🥗</span><span class="name">西餐</span></div>
+      <div class="food-item" data-name="甜品"><span class="emo">🍰</span><span class="name">甜品</span></div>
+      <div class="food-item" data-name="小龙虾"><span class="emo">🦞</span><span class="name">小龙虾</span></div>
+      <div class="food-item" data-name="都可以"><span class="emo">🍽️</span><span class="name">都可以</span></div>
+    </div>
+
+    <div class="custom-field" id="customField">
+      <input type="text" id="customInput" placeholder="也可以写下突然你想吃的…" maxlength="15">
+    </div>
+
+    <button class="btn-full" onclick="goPage(4)">就这个！✨</button>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- ===== 第4页：确认 ===== -->
+  <div class="page" id="page4">
+    <div class="top-deco">🎉 💕 🎉 💕 🎉</div>
+    <div class="avatar-wrap">
+      <div class="avatar">🐶</div>
+      <div class="avatar-hearts">💕</div>
+    </div>
+    <h1>真开心你没有拒绝～<br>我会来接你！😆</h1>
+    <p class="subtitle">这是我们的约会计划，期待那天的到来 ♡</p>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="emo">📅</div>
+        <div class="lab">日期</div>
+        <div class="val" id="sumDate">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="emo">⏰</div>
+        <div class="lab">时间</div>
+        <div class="val" id="sumTime">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="emo">🍽️</div>
+        <div class="lab">吃什么</div>
+        <div class="val" id="sumFood">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="emo">📍</div>
+        <div class="lab">见面地点</div>
+        <div class="val" id="sumPlace">—</div>
+      </div>
+    </div>
+
+    <button class="btn-full" id="sendBtn" onclick="sendReply()">告诉 TA 你的回复 💌</button>
+    <div class="hearts-row">💗 💗 💗 💗 💗</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // 默认日期：3天后
+  (function(){
+    const d = new Date();
+    d.setDate(d.getDate()+3);
+    const iso = d.toISOString().split('T')[0];
+    document.getElementById('dateInput').value = iso;
+    updateDateDisplay();
+    updateTimeDisplay();
+  })();
+  function updateDateDisplay(){
+    const v = document.getElementById('dateInput').value;
+    if(v){
+      const dt = new Date(v);
+      document.getElementById('dateDisplay').textContent =
+        `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
+    }
+  }
+  function updateTimeDisplay(){
+    document.getElementById('timeDisplay').textContent =
+      document.getElementById('timeInput').value || '18:00';
+  }
+
+  function goPage(n){
+    if(n===3){
+      const p = document.getElementById('placeInput').value.trim();
+      if(!p){ showToast('先填一下见面地点嘛～📍'); return; }
+    }
+    if(n===4){
+      const sel = document.querySelectorAll('.food-item.selected');
+      const customVal = document.getElementById('customInput').value.trim();
+      if(sel.length===0 && !customVal){ showToast('先选一个想吃的嘛～🥺'); return; }
+      fillSummary();
+      launchConfetti(30);
+    }
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page'+n).classList.add('active');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  // 不要按钮：第一次点就大幅飞移
+  let noClickCount = 0;
+  const noMsgs = ['不要 😤','真的不要？🥺','别跑呀～😢','你忍心？😭','最后求一次😳'];
+  function noDodge(){
+    noClickCount++;
+    const btn = document.getElementById('noBtn');
+    // 第一次大幅位移，之后也保持大幅度随机跳
+    const dx = (Math.random()-.5)*260;
+    const dy = (Math.random()-.5)*140;
+    btn.style.transform = `translate(${dx}px, ${dy}px) rotate(${(Math.random()-.5)*20}deg)`;
+    if(noClickCount < noMsgs.length){
+      btn.textContent = noMsgs[noClickCount];
+    } else {
+      btn.textContent = '好吧…走吧 😳';
+      btn.style.transform = 'translate(0,0)';
+      setTimeout(()=>{ btn.onclick = ()=>goPage(2); }, 300);
+    }
+  }
+
+  // 食物多选
+  document.querySelectorAll('.food-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      item.classList.toggle('selected');
+    });
+  });
+
+  function fillSummary(){
+    const d = document.getElementById('dateInput').value;
+    const t = document.getElementById('timeInput').value || '18:00';
+    const p = document.getElementById('placeInput').value.trim() || '你楼下';
+    const customVal = document.getElementById('customInput').value.trim();
+    const foods = [...document.querySelectorAll('.food-item.selected')]
+      .filter(i=>i.dataset.name!=='custom')
+      .map(i=>i.dataset.name);
+    if(customVal) foods.push(customVal);
+
+    // 格式化日期
+    let dateStr = d;
+    if(d){
+      const dt = new Date(d);
+      const week = ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
+      dateStr = `${dt.getMonth()+1}月${dt.getDate()}日 ${week}`;
+    }
+    document.getElementById('sumDate').textContent = dateStr;
+    document.getElementById('sumTime').textContent = t;
+    document.getElementById('sumFood').textContent = foods.join('、');
+    document.getElementById('sumPlace').textContent = p;
+  }
+
+  // 连续祝福
+  const blessings = [
+    '约会顺利！玩得开心 🎉',
+    '路上注意安全，准时到 ⏰',
+    '祝你今天吃得满意 🍽️',
+    '聊得来最重要，放轻松 😄',
+    '好运已经在路上啦 🍀',
+    '多拍点合照留纪念 📸',
+    '期待你们见面的样子 ✨',
+    '饭钱我包了，你人来就行 💪',
+    '天气不错，适合出门 🌤️',
+    '下次见面前记得洗头 😎'
+  ];
+  const strips = [
+    '💗 甜度超标警告','✨ 好运已送达','💌 心动+10086',
+    '🎉 幸福爆棚','🌹 浪漫加载中','💖 你们是最甜的'
+  ];
+  let sendCount = 0;
+  function sendReply(){
+    const btn = document.getElementById('sendBtn');
+    sendCount++;
+    if(sendCount===1){
+      btn.disabled = true;
+      btn.textContent = '送出中…';
+      setTimeout(()=>{
+        btn.disabled = false;
+        btn.textContent = '再放一波彩带 🎉';
+        launchConfetti(350);
+        bigHeartBurst();
+        bigHeartBurst();
+        bigHeartBurst();
+        popBlessing(blessings[0]);
+        document.querySelector('.card').classList.add('glow');
+        setTimeout(()=>document.querySelector('.card').classList.remove('glow'), 1600);
+      }, 700);
+    } else {
+      launchConfetti(150);
+      bigHeartBurst();
+      popBlessing(blessings[(sendCount-1) % blessings.length]);
+      btn.textContent = `再放一波彩带（${sendCount-1}）🎉`;
+    }
+  }
+  function popBlessing(text){
+    const el = document.createElement('div');
+    el.className = 'blessing';
+    el.textContent = text;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2700);
+  }
+  function spawnStrips(n){
+    for(let i=0;i<n;i++){
+      const s = document.createElement('div');
+      s.className = 'blessing-strip';
+      s.textContent = strips[Math.floor(Math.random()*strips.length)];
+      s.style.top = (10 + Math.random()*75) + 'vh';
+      s.style.animationDuration = (2.5+Math.random()*2)+'s';
+      s.style.animationDelay = (i*0.3)+'s';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(), 5500);
+    }
+  }
+  function bigHeartBurst(){
+    const emos = ['💖','💘','💝','💗','💞'];
+    for(let i=0;i<3;i++){
+      const h = document.createElement('div');
+      h.className = 'big-heart';
+      h.textContent = emos[Math.floor(Math.random()*emos.length)];
+      h.style.animationDelay = (i*0.15)+'s';
+      document.body.appendChild(h);
+      setTimeout(()=>h.remove(), 1500);
+    }
+  }
+  function launchBalloons(n=6){
+    const emos = ['🎈','🎈','🎈','🎈'];
+    for(let i=0;i<n;i++){
+      const b = document.createElement('div');
+      b.className = 'balloon';
+      b.textContent = emos[Math.floor(Math.random()*emos.length)];
+      b.style.left = (5 + Math.random()*90) + 'vw';
+      b.style.animationDuration = (3.5 + Math.random()*2.5) + 's';
+      b.style.animationDelay = (i*0.25) + 's';
+      b.style.fontSize = (36 + Math.random()*22) + 'px';
+      document.body.appendChild(b);
+      setTimeout(()=>b.remove(), 7000);
+    }
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  // 第1页爱心粒子持续冒出
+  setInterval(()=>{
+    if(!document.getElementById('page1').classList.contains('active')) return;
+    const wrap = document.getElementById('p1AvatarWrap');
+    const r = wrap.getBoundingClientRect();
+    const emos = ['💗','💕','💖','💓','🌸'];
+    const h = document.createElement('div');
+    h.className = 'heart-particle';
+    h.textContent = emos[Math.floor(Math.random()*emos.length)];
+    h.style.left = (r.left + r.width/2 + (Math.random()-.5)*60) + 'px';
+    h.style.top = (r.top + r.height/2) + 'px';
+    h.style.setProperty('--hx', ((Math.random()-.5)*120)+'px');
+    h.style.setProperty('--hr', ((Math.random()-.5)*90)+'deg');
+    h.style.fontSize = (16+Math.random()*14)+'px';
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 3000);
+  }, 600);
+
+  // 彩带
+  function launchConfetti(count=30, colors){
+    colors = colors || ['#ff5c9e','#ffd700','#87ceeb','#ffb6c1','#dda0dd','#98fb98'];
+    for(let i=0;i<count;i++){
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration = (2+Math.random()*2)+'s';
+      c.style.animationDelay = (Math.random()*0.5)+'s';
+      c.style.width = (6+Math.random()*8)+'px';
+      c.style.height = (6+Math.random()*8)+'px';
+      if(Math.random()>.5) c.style.borderRadius='50%';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 4500);
+    }
+  }
+</script>
+</body>
+</html>
+<!-- （注：内容由AI生成） -->
